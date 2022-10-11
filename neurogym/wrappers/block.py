@@ -136,7 +136,7 @@ class ScheduleEnvs(TrialWrapper):
         env_input: bool, if True, add scalar inputs indicating current
             environment. default False.
     """
-    def __init__(self, envs, schedule, env_input=False):
+    def __init__(self, envs, schedule, env_input=False, delay_rule_input=False, pct=0.0):
         super().__init__(envs[0])
         for env in envs:
             env.unwrapped.set_top(self)
@@ -151,10 +151,16 @@ class ScheduleEnvs(TrialWrapper):
                 raise ValueError('Env must have 1-D Box shape',
                                  'Instead got ' + str(env_shape))
             _have_equal_shape(envs)
+            
+            
             self.observation_space = spaces.Box(
                 -np.inf, np.inf, shape=(env_shape[0] + len(self.envs),),
                 dtype=self.observation_space.dtype
             )
+        
+        self.delay_rule_input = delay_rule_input
+        self.pct = pct
+            
 
     def seed(self, seed=None):
         for env in self.envs:
@@ -193,7 +199,7 @@ class ScheduleEnvs(TrialWrapper):
         # but don't use schedule here since don't want to change the env between reset() and first call to new_trial()
         self.i_env = self.next_i_env
         self.env = self.envs[self.i_env]
-
+        
         if not self.env_input:
             trial = self.env.new_trial(**kwargs)
         else:
@@ -201,7 +207,15 @@ class ScheduleEnvs(TrialWrapper):
             # Expand observation
             env_ob = np.zeros((self.unwrapped.ob.shape[0], len(self.envs)),
                               dtype=self.unwrapped.ob.dtype)
-            env_ob[:, self.i_env] = 1.
+            
+            
+            env_ob[:,self.i_env] = 1. 
+            if self.delay_rule_input:
+                j = int(self.pct*env_ob.shape[0])
+                env_ob[:j, self.i_env] = [0] * j
+                env_ob[-1, self.i_env] = 1.
+            
+            
             self.unwrapped.ob = np.concatenate(
                 (self.unwrapped.ob, env_ob), axis=-1)
 

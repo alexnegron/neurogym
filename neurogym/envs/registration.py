@@ -232,7 +232,7 @@ def make(id, **kwargs):
         raise gym.error.UnregisteredEnv(err_msg)
 
 
-_all_gym_envs = [env.id for env in gym.envs.registry.all()]
+_all_gym_envs = [env for env in gym.envs.registry.keys()]
 
 
 def register(id, **kwargs):

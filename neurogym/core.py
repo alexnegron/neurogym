@@ -211,6 +211,7 @@ class TrialEnv(BaseEnv):
             info['trial'] = trial
         if ob is OBNOW:
             ob = self.ob[self.t_ind]
+            
         return self.post_step(ob, reward, done, info)
 
     def reset(self, seed=None, return_info=False, options=None, step_fn=None, no_step=False):

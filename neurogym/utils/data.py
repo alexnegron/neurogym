@@ -25,7 +25,7 @@ class Dataset(object):
 
     def __init__(self, env, env_kwargs=None,
                  batch_size=1, seq_len=None, max_batch=np.inf,
-                 batch_first=False, cache_len=None):
+                 batch_first=False, cache_len=None, pct=0):
         if isinstance(env, gym.Env):
             self.envs = [copy.deepcopy(env) for _ in range(batch_size)]
         else:
@@ -42,6 +42,11 @@ class Dataset(object):
         self.env = env
         self.batch_size = batch_size
         self.batch_first = batch_first
+        
+        if pct > 1.0 or pct < 0.0:
+            raise ValueError("pct must be between 0 and 1")
+        else:
+            self.pct = pct
 
         if seq_len is None:
             # TODO: infer sequence length from task
@@ -90,6 +95,8 @@ class Dataset(object):
                 # TODO: Right now this only works for env with new_trial
                 env.new_trial(**kwargs)
                 ob, gt = env.ob, env.gt
+                #print(ob.shape)
+                
                 seq_len = ob.shape[0]
                 seq_end = seq_start + seq_len
                 if seq_end > self._cache_len:
@@ -101,6 +108,8 @@ class Dataset(object):
                 else:
                     self._inputs[seq_start:seq_end, i, ...] = ob[:seq_len]
                     self._target[seq_start:seq_end, i, ...] = gt[:seq_len]
+                    #print(ob[:seq_len])
+                    #print(ob.shape)
                 seq_start = seq_end
 
         self._seq_start = 0
@@ -122,7 +131,7 @@ class Dataset(object):
 
         if self._seq_end >= self._cache_len:
             self._cache(**kwargs)
-
+            
         if self.batch_first:
             inputs = self._inputs[:, self._seq_start:self._seq_end, ...]
             target = self._target[:, self._seq_start:self._seq_end, ...]
@@ -131,6 +140,7 @@ class Dataset(object):
             target = self._target[self._seq_start:self._seq_end]
 
         self._seq_start = self._seq_end
+        
         return inputs, target
         # return inputs, np.expand_dims(target, axis=2)
 

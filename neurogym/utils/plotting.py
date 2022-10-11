@@ -198,6 +198,7 @@ def plot_env_1dbox(
 
     f, axes = plt.subplots(n_row, 1, **fig_kwargs)
     i_ax = 0
+    
     # ob
     ax = axes[i_ax]
     i_ax += 1
@@ -205,15 +206,15 @@ def plot_env_1dbox(
         assert len(ob_traces) == ob.shape[1],\
             'Please provide label for each of the '+str(ob.shape[1]) +\
             ' traces in the observations'
-        yticks = []
+        #yticks = []
         for ind_tr, tr in enumerate(ob_traces):
             ax.plot(ob[:, ind_tr], label=ob_traces[ind_tr])
-            yticks.append(np.mean(ob[:, ind_tr]))
+            #yticks.append(np.mean(ob[:, ind_tr]))
         if legend:
-            ax.legend()
+            ax.legend(bbox_to_anchor=(1,1), loc="upper left")
         ax.set_xlim([-0.5, len(steps)-0.5])
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(ob_traces)
+        #ax.set_yticks(yticks)
+        #ax.set_yticklabels(ob_traces)
     else:
         ax.imshow(ob.T, aspect='auto', origin='lower')
         if env and hasattr(env.observation_space, 'name'):
@@ -234,7 +235,8 @@ def plot_env_1dbox(
     if name:
         ax.set_title(name + ' env')
     ax.set_ylabel('Obs.')
-    ax.set_xticks([])
+    #ax.set_xticks([])
+    
     # actions
     ax = axes[i_ax]
     i_ax += 1
@@ -256,18 +258,21 @@ def plot_env_1dbox(
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     if legend:
-        ax.legend()
+        ax.legend(bbox_to_anchor=(1,1), loc="upper left")
     if env and hasattr(env.action_space, 'name'):
         # Plot environment annotation
-        yticks = []
-        yticklabels = []
-        for key, val in env.action_space.name.items():
-            yticks.append((np.min(val) + np.max(val)) / 2)
-            yticklabels.append(key)
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(yticklabels)
-    if n_row > 2:
-        ax.set_xticks([])
+        # yticks = []
+        # yticklabels = []
+        # for key, val in env.action_space.name.items():
+        #     yticks.append((np.min(val) + np.max(val)) / 2)
+        #     yticklabels.append(key)
+        # ax.set_yticks(yticks)
+        # ax.set_yticklabels(yticklabels)
+        pass
+    
+    # if n_row > 2:
+    #     ax.set_xticks([])
+        
     # rewards
     if rewards is not None:
         ax = axes[i_ax]
@@ -277,7 +282,7 @@ def plot_env_1dbox(
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         if legend:
-            ax.legend()
+            ax.legend(bbox_to_anchor=(1,1), loc="upper left")
         ax.set_xlim([-0.5, len(steps)-0.5])
 
         if env and hasattr(env, 'rewards') and env.rewards:
@@ -289,8 +294,8 @@ def plot_env_1dbox(
                 yticklabels.append('{:s} {:0.2f}'.format(key[:4], val))
             ax.set_yticks(yticks)
             ax.set_yticklabels(yticklabels)
-    if n_row > 3:
-        ax.set_xticks([])
+    # if n_row > 3: # I want xticks
+    #     ax.set_xticks([])
     # performance
     if performance is not None:
         ax = axes[i_ax]
@@ -303,12 +308,12 @@ def plot_env_1dbox(
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         if legend:
-            ax.legend()
+            ax.legend(bbox_to_anchor=(1,1), loc="upper left")
         ax.set_xlim([-0.5, len(steps)-0.5])
 
     # states
     if states is not None:
-        ax.set_xticks([])
+        #ax.set_xticks([])
         ax = axes[i_ax]
         i_ax += 1
         plt.imshow(states[:, int(states.shape[1]/2):].T,

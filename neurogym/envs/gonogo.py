@@ -58,7 +58,7 @@ class GoNogo(ngym.TrialEnv):
         trial.update(kwargs)
 
         # Period info
-        periods = ['fixation', 'stimulus', 'delay', 'decision']
+        periods = ['fixation', 'stimulus', 'delay','decision']
         self.add_period(periods)
         # set observations
         self.add_ob(1, where='fixation')
@@ -76,6 +76,7 @@ class GoNogo(ngym.TrialEnv):
         new_trial = False
         reward = 0
         ob = self.ob_now
+        
         gt = self.gt_now
         if self.in_period('fixation'):
             if action != 0:

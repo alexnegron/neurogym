@@ -45,7 +45,7 @@ class PerceptualDecisionMaking(ngym.TrialEnv):
 
         self.timing = {
             'fixation': 100,
-            'stimulus': 2000,
+            'stimulus': 2000, 
             'delay': 0,
             'decision': 100}
         if timing:
@@ -59,6 +59,7 @@ class PerceptualDecisionMaking(ngym.TrialEnv):
         name = {'fixation': 0, 'stimulus': range(1, dim_ring+1)}
         self.observation_space = spaces.Box(
             -np.inf, np.inf, shape=(1+dim_ring,), dtype=np.float32, name=name)
+        
         name = {'fixation': 0, 'choice': range(1, dim_ring+1)}
         self.action_space = spaces.Discrete(1+dim_ring, name=name)
 
@@ -89,13 +90,17 @@ class PerceptualDecisionMaking(ngym.TrialEnv):
 
         # Observations
         self.add_ob(1, period=['fixation', 'stimulus', 'delay'], where='fixation')
+        # Stimulus observations
         stim = np.cos(self.theta - stim_theta) * (coh/200) + 0.5
-        self.add_ob(stim, 'stimulus', where='stimulus')
-        self.add_randn(0, self.sigma, 'stimulus', where='stimulus')
+        self.add_ob(stim, period=['stimulus'], where='stimulus')
+        self.add_randn(0, self.sigma, period=['stimulus'], where='stimulus')
 
+
+        
         # Ground truth
         self.set_groundtruth(ground_truth, period='decision', where='choice')
-
+        
+        #print(self.unwrapped.tmax)
         return trial
 
     def _step(self, action):
@@ -112,11 +117,15 @@ class PerceptualDecisionMaking(ngym.TrialEnv):
         # rewards
         reward = 0
         gt = self.gt_now
+        ob = self.ob_now
+        
+        
         # observations
         if self.in_period('fixation'):
             if action != 0:  # action = 0 means fixating
                 new_trial = self.abort
                 reward += self.rewards['abort']
+            
         elif self.in_period('decision'):
             if action != 0:
                 new_trial = True
@@ -126,7 +135,7 @@ class PerceptualDecisionMaking(ngym.TrialEnv):
                 else:
                     reward += self.rewards['fail']
 
-        return self.ob_now, reward, False, {'new_trial': new_trial, 'gt': gt}
+        return ob, reward, False, {'new_trial': new_trial, 'gt': gt}
 
 
 #  TODO: there should be a timeout of 1000ms for incorrect trials
@@ -197,6 +206,8 @@ class PerceptualDecisionMakingDelayResponse(ngym.TrialEnv):
 
         # define observations
         self.set_ob([1, 0, 0], 'fixation')
+        
+        
         stim = self.view_ob('stimulus')
         stim[:, 0] = 1
         stim[:, 1:] = (1 - trial['coh']/100)/2
