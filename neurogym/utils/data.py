@@ -54,6 +54,7 @@ class Dataset(object):
 
         obs_shape = env.observation_space.shape
         action_shape = env.action_space.shape
+        
         if len(action_shape) == 0:
             self._expand_action = True
         else:

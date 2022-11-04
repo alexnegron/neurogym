@@ -346,3 +346,133 @@ class PulseDecisionMaking(ngym.TrialEnv):
                 reward += self.rewards['abort']
 
         return self.ob_now, reward, False, {'new_trial': new_trial, 'gt': gt}
+
+    
+    
+    
+# class PerceptualDecisionMaking(ngym.TrialEnv):
+#     def __init__(self, dt=100, rewards=None, timing=None, cohs=None,
+#                  sigma=1.0, dim_ring=2):
+#         super().__init__(dt=dt)
+#         if cohs is None:
+#             self.cohs = np.array([0, 6.4, 12.8, 25.6, 51.2])
+#         else:
+#             self.cohs = cohs
+#         self.sigma = sigma / np.sqrt(self.dt)  # Input noise
+
+#         # Rewards
+#         self.rewards = {'abort': -0.1, 'correct': +1., 'fail': 0.}
+#         if rewards:
+#             self.rewards.update(rewards)
+
+#         self.timing = {
+#             'fixation': 100,
+#             'stimulus': 2000, 
+#             'delay': 0,
+#             'decision': 100
+#         }
+        
+#         if timing:
+#             self.timing.update(timing)
+
+#         self.abort = False
+
+#         self.theta = np.linspace(0, 2*np.pi, dim_ring+1)[:-1]
+#         self.choices = np.arange(dim_ring)
+
+#         # Had to add 'rule':3
+#         name = {'fixation': 0, 'stimulus': range(1, dim_ring+1), 'rule':3}
+        
+        
+#         # add another dimension to the ob space 
+#         self.observation_space = spaces.Box(
+#             -np.inf, np.inf, shape=(2+dim_ring,), dtype=np.float32, name=name)
+        
+#         name = {'fixation': 0, 'choice': range(1, dim_ring+1)}
+#         self.action_space = spaces.Discrete(1+dim_ring, name=name)
+        
+        
+        
+#         self.add_period('rule', duration=300)
+
+#     def _new_trial(self, **kwargs):
+#         """
+#         new_trial() is called when a trial ends to generate the next trial.
+#         The following variables are created:
+#             durations, which stores the duration of the different periods (in
+#             the case of perceptualDecisionMaking: fixation, stimulus and
+#             decision periods)
+#             ground truth: correct response for the trial
+#             coh: stimulus coherence (evidence) for the trial
+#             obs: observation
+#         """
+#         # Trial info
+#         trial = {
+#             'ground_truth': self.rng.choice(self.choices),
+#             'coh': self.rng.choice(self.cohs),
+#         }
+#         trial.update(kwargs)
+
+#         coh = trial['coh']
+#         ground_truth = trial['ground_truth']
+#         stim_theta = self.theta[ground_truth]
+
+#         # Periods
+#         self.add_period(['fixation', 'stimulus', 'delay', 'decision'])
+        
+
+        
+#         # Observations
+#         self.add_ob(1, period=['fixation', 'stimulus', 'delay'], where='fixation')
+        
+        
+
+#         # Stimulus observations
+#         stim = np.cos(self.theta - stim_theta) * (coh/200) + 0.5
+#         self.add_ob(stim, period=['stimulus'], where='stimulus')
+#         self.add_randn(0, self.sigma, period=['stimulus'], where='stimulus')
+        
+#         # Ground truth
+#         self.set_groundtruth(ground_truth, period='decision', where='choice')
+        
+#         # Rule observation
+#         print(self)
+#         self.add_ob(1, where='rule')
+#         self.set_ob(0, period='rule', where='fixation')
+#         self.set_ob(0, period='rule', where='stimulus')
+        
+#         return trial
+
+#     def _step(self, action):
+#         """
+#         _step receives an action and returns:
+#             a new observation, obs
+#             reward associated with the action, reward
+#             a boolean variable indicating whether the experiment has end, done
+#             a dictionary with extra information:
+#                 ground truth correct response, info['gt']
+#                 boolean indicating the end of the trial, info['new_trial']
+#         """
+#         new_trial = False
+#         # rewards
+#         reward = 0
+#         gt = self.gt_now
+#         ob = self.ob_now
+        
+        
+#         # observations
+#         if self.in_period('fixation'):
+#             if action != 0:  # action = 0 means fixating
+#                 new_trial = self.abort
+#                 reward += self.rewards['abort']
+            
+#         elif self.in_period('decision'):
+#             if action != 0:
+#                 new_trial = True
+#                 if action == gt:
+#                     reward += self.rewards['correct']
+#                     self.performance = 1
+#                 else:
+#                     reward += self.rewards['fail']
+
+#         return ob, reward, False, {'new_trial': new_trial, 'gt': gt}

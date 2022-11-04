@@ -4,6 +4,7 @@ from neurogym.wrappers.pass_reward import PassReward
 from neurogym.wrappers.pass_action import PassAction
 from neurogym.wrappers.reaction_time import ReactionTime
 from neurogym.wrappers.side_bias import SideBias
+from neurogym.wrappers.delayed_rule import DelayedRuleInput
 from neurogym.wrappers.block import RandomGroundTruth
 from neurogym.wrappers.block import ScheduleAttr
 from neurogym.wrappers.block import ScheduleEnvs
