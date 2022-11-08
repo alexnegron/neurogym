@@ -223,7 +223,6 @@ class ScheduleEnvs(TrialWrapper):
         if not self.env_input:
             trial = self.env.new_trial(**kwargs)
         else:
-            
             trial = self.env.new_trial(**kwargs)
             #print(self.unwrapped)
             
@@ -231,64 +230,33 @@ class ScheduleEnvs(TrialWrapper):
             env_ob = np.zeros((self.unwrapped.ob.shape[0], len(self.envs)),
                               dtype=self.unwrapped.ob.dtype)
             
-            # Puts rule inputs at the back of input array
-            # if np.any(self.unwrapped.ob[:,17]) == True:
-            #     tmp = self.unwrapped.ob[:,17]
-            #     env_ob[:,self.i_env] = tmp
-            # else:
-            #     pass
-            # if np.any(self.unwrapped.ob[:, 33]) == True:
-            #     tmp = self.unwrapped.ob[:, 33]
-            #     env_ob[:, self.i_env] = tmp
-            # else:
-            #     pass
-            # self.unwrapped.ob[:,17] = 0
-            # self.unwrapped.ob[:,33] = 0
-            
-            # if np.any(self.unwrapped.ob[:,34]) == True:
-            #     tmp = self.unwrapped.ob[:,34]
-            #     #print(tmp)
-            #     env_ob[:, self.i_env] = tmp
-            # else:
-            #     pass
-            
-            #print(self.unwrapped)
-            
-            # tmp = self.unwrapped.ob[:, -1].copy()
-            # tmp[tmp!=1]=0            
-            # env_ob[:, self.i_env] = tmp
-            # tmp = self.unwrapped.ob[:, -1].copy()
-            # tmp[tmp==1]=0
-            # self.unwrapped.ob[:,-1] = tmp
-            
-            # This block was from "easy" implementation 
-            # env_ob[:, self.i_env] = 1.
-            # if self.delay_rule_input:
-            #     j = int(self.pct*env_ob.shape[0])
-            #     env_ob[:j, self.i_env] = [0] * j
-            #     env_ob[-1, self.i_env] = 1.
-            
-            
-            if 1 in self.unwrapped.ob[:, 17]:
-                #env_ob[:, self.i_env] = self.unwrapped.ob[:, 17]
-                tmp = self.unwrapped.ob[:, 17].copy()                
-                self.unwrapped.ob[:, 17] = [0]*len(self.unwrapped.ob[:, 17])
-                env_ob[:, self.i_env] = tmp
-            elif 1 in self.unwrapped.ob[:, 33]:
-                tmp = self.unwrapped.ob[:, 33].copy()                
-                self.unwrapped.ob[:, 33] = [0]*len(self.unwrapped.ob[:, 33])
-                env_ob[:, self.i_env] = tmp
-            else:  
-                #env_ob[:, self.i_env] = 1.
-                tmp = self.unwrapped.ob[:, -1].copy()
-                tmp[tmp!=1]=0            
-                env_ob[:, self.i_env] = tmp
-                tmp = self.unwrapped.ob[:, -1].copy()
-                tmp[tmp==1]=0
-                self.unwrapped.ob[:,-1] = tmp
+            if self.delay_rule_input: 
+                # Array magic to delay rule input
+                # Note: only works for 2 ring modalities! 
+                if 1 in self.unwrapped.ob[:, 17]:
+                    #env_ob[:, self.i_env] = self.unwrapped.ob[:, 17]
+                    tmp = self.unwrapped.ob[:, 17].copy()                
+                    self.unwrapped.ob[:, 17] = [0]*len(self.unwrapped.ob[:, 17])
+                    env_ob[:, self.i_env] = tmp
+                elif 1 in self.unwrapped.ob[:, 33]:
+                    tmp = self.unwrapped.ob[:, 33].copy()                
+                    self.unwrapped.ob[:, 33] = [0]*len(self.unwrapped.ob[:, 33])
+                    env_ob[:, self.i_env] = tmp
+                else:  
+                    #env_ob[:, self.i_env] = 1.
+                    tmp = self.unwrapped.ob[:, -1].copy()
+                    tmp[tmp!=1]=0            
+                    env_ob[:, self.i_env] = tmp
+                    tmp = self.unwrapped.ob[:, -1].copy()
+                    tmp[tmp==1]=0
+                    self.unwrapped.ob[:,-1] = tmp
                 
-            self.unwrapped.ob = np.concatenate(
-                (self.unwrapped.ob, env_ob), axis=-1)
+                self.unwrapped.ob = np.concatenate(
+                    (self.unwrapped.ob, env_ob), axis=-1)
+            else:
+                env_ob[:, self.i_env] = 1.
+                self.unwrapped.ob = np.concatenate(
+                    (self.unwrapped.ob, env_ob), axis=-1)
         
         # want self.ob to refer to the ob of the new trial, so can't change self.env here => use next_i_env
         self.next_i_env = self.schedule()
