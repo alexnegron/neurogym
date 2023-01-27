@@ -80,7 +80,7 @@ class _TimeRotation(EnvWithAdditions):
                  dt=100,
                  rewards=None,
                  timing=None,
-                 sigma=.35,
+                 sigma=.15,
                  dim_ring=16,
                  stim_mod = (True, True, True), 
                  # currently, stim_mod is tuple, turns into dict for arbitrary num of mods
@@ -210,6 +210,7 @@ class _TimeRotation(EnvWithAdditions):
             if self.rot['stim_mod'+str(i+1)]:
                 dir = np.random.choice([-1,1])
                 rot_dirs['stim_mod'+str(i+1)] = dir
+
             else: # when ring is NOT rotating, direction it rotates ring 1 by depends where theta falls on the ring
                 if 0 <=  trial['theta'+str(i+1)] and trial['theta'+str(i+1)] < np.pi: # upper half-circle => counter-clockwise rotate
                     dir = 1
@@ -399,6 +400,43 @@ def fmax1_fmax2_ffp3_mtrot(**kwargs):
 def ffp1_fmax2_fmax3_mtrot(**kwargs):
     env_kwargs = _mtrot_kwargs()
     env_kwargs.update({'varbump' : (False, True, True), 'state' : ('fp', 'max', 'max')})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+## Two ring, fixed max-hierarchy 
+def ffp1_ffp2_rot(**kwargs):
+    env_kwargs = _rot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+def ffp1_ffp2_trot(**kwargs):
+    env_kwargs = _trot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+def ffp1_ffp2_mrot(**kwargs):
+    env_kwargs = _mrot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+def ffp1_ffp2_mtrot(**kwargs):
+    env_kwargs = _mtrot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+def fmax1_ffp2_mtrot(**kwargs):
+    env_kwargs = _mtrot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('max', 'fp'), 'varbump' : (True, False)})
+    env_kwargs.update(kwargs)
+    return _TimeRotation(**env_kwargs)
+
+def ffp1_fmax2_mtrot(**kwargs):
+    env_kwargs = _mtrot_kwargs()
+    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'max'), 'varbump' : (False, True)})
     env_kwargs.update(kwargs)
     return _TimeRotation(**env_kwargs)
 
