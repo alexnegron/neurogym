@@ -69,9 +69,83 @@ def _have_equal_shape(envs):
                 ' and ' + str(env_act_shape) + ' for ' + str(envs[0]))
 
 
+# class MultiEnvs(TrialWrapper):
+#     """Wrap multiple environments.
+
+#     Args:
+#         envs: list of env object
+#         env_input: bool, if True, add scalar inputs indicating current
+#             envinronment. default False.
+#     """
+#     def __init__(self, envs, env_input=False):
+#         super().__init__(envs[0])
+#         for env in envs:
+#             env.unwrapped.set_top(self)
+#         self.envs = envs
+#         self.i_env = 0
+
+#         self.env_input = env_input
+#         if env_input:
+#             env_shape = envs[0].observation_space.shape
+#             if len(env_shape) > 1:
+#                 raise ValueError('Env must have 1-D Box shape',
+#                                  'Instead got ' + str(env_shape))
+#             _have_equal_shape(envs)
+#             self.observation_space = spaces.Box(
+#                 -np.inf, np.inf, shape=(env_shape[0] + len(self.envs),),
+#                 dtype=self.observation_space.dtype
+#             )
+
+#     def reset(self, **kwargs):
+#         # return the initial ob of the first env in the list envs by default
+#         return_i_env = 0
+
+#         for i, env in enumerate(self.envs):
+#             self.set_i(i)
+#             env.reset(**kwargs)
+
+#         self.set_i(0)
+
+
+#     def set_i(self, i):
+#         """Set the i-th environment."""
+#         self.i_env = i
+#         self.env = self.envs[self.i_env]
+
+#     def new_trial(self, **kwargs):
+#         if not self.env_input:
+#             return self.env.new_trial(**kwargs)
+#         else:
+#             trial = self.env.new_trial(**kwargs)
+#             # Expand observation
+#             env_ob = np.zeros((self.unwrapped.ob.shape[0], len(self.envs)),
+#                               dtype=self.unwrapped.ob.dtype)
+#             # env_ob[:, self.i_env] = 1.
+            
+            
+#             if 1 in self.unwrapped.ob[:, 17]:
+#                 #env_ob[:, self.i_env] = self.unwrapped.ob[:, 17]
+#                 tmp = self.unwrapped.ob[:, 17].copy()                
+#                 self.unwrapped.ob[:, 17] = [0]*len(self.unwrapped.ob[:, 17])
+#                 env_ob[:, self.i_env] = tmp
+#             elif 1 in self.unwrapped.ob[:, 33]:
+#                 tmp = self.unwrapped.ob[:, 33].copy()                
+#                 self.unwrapped.ob[:, 33] = [0]*len(self.unwrapped.ob[:, 33])
+#                 env_ob[:, self.i_env] = tmp
+#             else:  
+#                 #env_ob[:, self.i_env] = 1.
+#                 tmp = self.unwrapped.ob[:, -1].copy()
+#                 tmp[tmp!=1]=0            
+#                 env_ob[:, self.i_env] = tmp
+#                 tmp = self.unwrapped.ob[:, -1].copy()
+#                 tmp[tmp==1]=0
+#                 self.unwrapped.ob[:,-1] = tmp
+                
+#             self.unwrapped.ob = np.concatenate(
+#                 (self.unwrapped.ob, env_ob), axis=-1)
+#             return trial
 class MultiEnvs(TrialWrapper):
     """Wrap multiple environments.
-
     Args:
         envs: list of env object
         env_input: bool, if True, add scalar inputs indicating current
@@ -120,27 +194,7 @@ class MultiEnvs(TrialWrapper):
             # Expand observation
             env_ob = np.zeros((self.unwrapped.ob.shape[0], len(self.envs)),
                               dtype=self.unwrapped.ob.dtype)
-            # env_ob[:, self.i_env] = 1.
-            
-            
-            if 1 in self.unwrapped.ob[:, 17]:
-                #env_ob[:, self.i_env] = self.unwrapped.ob[:, 17]
-                tmp = self.unwrapped.ob[:, 17].copy()                
-                self.unwrapped.ob[:, 17] = [0]*len(self.unwrapped.ob[:, 17])
-                env_ob[:, self.i_env] = tmp
-            elif 1 in self.unwrapped.ob[:, 33]:
-                tmp = self.unwrapped.ob[:, 33].copy()                
-                self.unwrapped.ob[:, 33] = [0]*len(self.unwrapped.ob[:, 33])
-                env_ob[:, self.i_env] = tmp
-            else:  
-                #env_ob[:, self.i_env] = 1.
-                tmp = self.unwrapped.ob[:, -1].copy()
-                tmp[tmp!=1]=0            
-                env_ob[:, self.i_env] = tmp
-                tmp = self.unwrapped.ob[:, -1].copy()
-                tmp[tmp==1]=0
-                self.unwrapped.ob[:,-1] = tmp
-                
+            env_ob[:, self.i_env] = 1.
             self.unwrapped.ob = np.concatenate(
                 (self.unwrapped.ob, env_ob), axis=-1)
             return trial

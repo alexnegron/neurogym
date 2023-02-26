@@ -156,6 +156,8 @@ class _Reach(EnvWithAdditions):
             self.add_ob(stim, 'stimulus', where='stimulus')
         else:
             periods = ['fixation', 'decision']
+            self.timing['delay'] = 0
+            self.timing['stimulus'] = 0
             self.add_period(periods)
 
             self.add_ob(1, period='fixation', where='fixation')
@@ -221,17 +223,17 @@ class _DMFamily(EnvWithAdditions):
         if rewards:
             self.rewards.update(rewards)
 
-
+        f = np.random.uniform(200, 500)
         if self.delaycomparison:
             self.timing = {
-                'fixation': lambda: self.rng.uniform(200, 500),
+                'fixation': f,
                 'stim1': 500,
                 'delay': 500,
                 'stim2': 500,
                 'decision': 200}
         else:
             self.timing = {
-                'fixation': lambda: self.rng.uniform(200, 500),
+                'fixation': f,
                 'stimulus': 500,
                 'decision': 200}
         if timing:
