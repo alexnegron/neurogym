@@ -210,7 +210,7 @@ class ScheduleEnvs(TrialWrapper):
         env_input: bool, if True, add scalar inputs indicating current
             environment. default False.
     """
-    def __init__(self, envs, schedule, env_input=False, delay_rule_input=False, pct=0.0):
+    def __init__(self, envs, schedule, env_input=False, delay_rule_input=False, temp_init_rule_input=False, rule_input_dur = False, pct=0.0):
         super().__init__(envs[0])
         for env in envs:
             env.unwrapped.set_top(self)
@@ -233,6 +233,8 @@ class ScheduleEnvs(TrialWrapper):
             )
         
         self.delay_rule_input = delay_rule_input
+        self.temp_init_rule_input = temp_init_rule_input
+        self.rule_input_dur = rule_input_dur
         self.pct = pct
             
 
@@ -279,12 +281,17 @@ class ScheduleEnvs(TrialWrapper):
         else:
             trial = self.env.new_trial(**kwargs)
             #print(self.unwrapped)
-            
+
             # Expand observation
             env_ob = np.zeros((self.unwrapped.ob.shape[0], len(self.envs)),
                               dtype=self.unwrapped.ob.dtype)
             
-            if self.delay_rule_input: 
+            if self.temp_init_rule_input: 
+                env_ob[:self.rule_input_dur, self.i_env] = 1.
+                self.unwrapped.ob = np.concatenate(
+                    (self.unwrapped.ob, env_ob), axis=-1) 
+                    
+            elif self.delay_rule_input: 
                 # Array magic to delay rule input
                 # Note: only works for 2 ring modalities! 
                 if 1 in self.unwrapped.ob[:, 17]:
