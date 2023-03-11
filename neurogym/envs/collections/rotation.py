@@ -340,6 +340,7 @@ class _ContextRotation(EnvWithAdditions):
         self.dim_ring = dim_ring
         self.delay = delay
         self.t = t
+        
         self.m = m
         self.rot_comp = rot_comp
         self.lp = 0
