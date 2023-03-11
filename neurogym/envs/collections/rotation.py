@@ -340,7 +340,7 @@ class _ContextRotation(EnvWithAdditions):
         self.dim_ring = dim_ring
         self.delay = delay
         self.t = t
-        
+
         self.m = m
         self.rot_comp = rot_comp
         self.lp = 0
@@ -482,6 +482,7 @@ class _ContextRotation(EnvWithAdditions):
         for i in range(len(self.mods)):
             for j in range(len(self.mods)):
                 self.set_ob(0, period='stimulus'+str(i+1), where='context'+str(j+1))
+
 
         # self.pos = i_thetas['i_theta'+str(ctx_idx+1)]
         # self.ctx = ctx_idx 
