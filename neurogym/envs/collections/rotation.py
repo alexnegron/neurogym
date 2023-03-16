@@ -75,7 +75,7 @@ class EnvWithAdditions(ngym.TrialEnv):
             for p in period:
                 self.my_set_groundtruth(value, p)
 
-class _TimeRotation(EnvWithAdditions):
+class _Rotation(EnvWithAdditions):
     def __init__(self,
                  dt=100,
                  rewards=None,
@@ -90,7 +90,7 @@ class _TimeRotation(EnvWithAdditions):
                  m = False,
                  rot = (False, False, False), 
                  rot_speed = (1, 1, 1),
-                 state = ('fp', 'fp', 'fp'),
+                 state = ('lp', 'lp', 'lp'),
                  varbump = (False, False, False),
                  rot_comp = False):
         
@@ -450,8 +450,8 @@ class _ContextRotation(EnvWithAdditions):
         # perform task-prescribed modifications to each ring 
         rot_dirs = {} # keep track of which directions ring rotates
         for i in range(len(self.mods)):
-            #dir = np.random.choice([-1,1])
-            dir = 1 
+            dir = np.random.choice([-1,1])
+            #dir = 1 
             rot_dirs['stim_mod'+str(i+1)] = dir
             speed = self.rot_speed['stim_mod'+str(i+1)]
             obs = self.ob[self.start_ind['stimulus'+str(i+1)] : self.end_ind['stimulus'+str(i+1)]]
@@ -464,7 +464,11 @@ class _ContextRotation(EnvWithAdditions):
                     obs[j, i*self.dim_ring+1 : (i+1)*self.dim_ring+1] = np.roll(obs[j, i*self.dim_ring+1 : (i+1)*self.dim_ring+1], dir*speed*j) # performs rotation
             
             prev = i_thetas['i_theta'+str(i+1)]
-            i_thetas['i_theta'+str(i+1)] = np.mod(prev + dur//self.dt-1, self.dim_ring)
+            if dir == 1: 
+                correction = -1
+            else:
+                correction = 1 
+            i_thetas['i_theta'+str(i+1)] = np.mod(prev + dir*speed*dur//self.dt + speed*correction, self.dim_ring)
 
         self.add_ob(1, where='fixation')
         self.set_ob(0, 'decision')
@@ -542,472 +546,49 @@ def _2ring_ctxrot_kwargs():
     env_kwargs = {'stim_mod':(True, True),'rot':(True, True), 'state':('lp','lp'), 'sigma':0}
     return env_kwargs
 
+def _3ring_ctxrot_kwargs():
+    env_kwargs = {'stim_mod':(True, True, True),
+                  'rot':(True, True, True), 
+                  'state':('lp','lp', 'lp'), 
+                  'sigma':0, 
+                  'rot_speed':(1,1,1)}
+    return env_kwargs
+
 """
-Task naming conventions
-
-'A_B_C_trot2' where A, B, C indicate 2 properties of each ring, in order:
-- rotation = 'r', otherwise 'f' (fixed)
-- state = 'lp'/'fp'/'min'/'max'
-- ring number  
-
-If 'mtrot2', then states of Ring2 and Ring3 influence magnitude of their 
-induced rotations to Ring1.
-
-Example 1: rlp1_ffp2_ffp3_trot2 
-Ring1 is rotating, state indicated by last position. 
-Ring2 is fixed, state indicated by first position. 
-Ring3 is fixed, state indicated by first position. 
-
-Example 2: 
-...
-
+Task names
 """
 ##########
-def ctxrot(**kwargs):
-    env_kwargs = _2ring_ctxrot_kwargs()
-    return _ContextRotation(**env_kwargs)
-
-def dlyctxrot1(**kwargs):
+def dlyctxrot1_2ring(**kwargs):
     env_kwargs = _2ring_ctxrot_kwargs()
     env_kwargs.update({'delay':500, 'ctx':1})
+    env_kwargs.update(**kwargs)
     return _ContextRotation(**env_kwargs)
 
-def dlyctxrot2(**kwargs):
+def dlyctxrot2_2ring(**kwargs):
     env_kwargs = _2ring_ctxrot_kwargs()
     env_kwargs.update({'delay':500, 'ctx':2})
+    env_kwargs.update(**kwargs)
     return _ContextRotation(**env_kwargs)
 
-
-def ctxrot2(**kwargs): 
-    pass
-
-
-
-"""
-Fixed ring hierachy 1. 
-"""
-def ffp1_ffp2_ffp3_rot(**kwargs):
-    env_kwargs = _rot_kwargs()
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_ffp3_trot(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_ffp3_mrot(**kwargs):
-    env_kwargs = _mrot_kwargs()
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_ffp3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_ffp2_ffp3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('max', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmax2_ffp3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_fmax3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'varbump' : (False, False, True), 'state' : ('fp', 'fp', 'max')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_fmax2_ffp3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmax2_fmax3_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, True), 'state' : ('fp', 'max', 'max')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-## Two ring, fixed max-hierarchy 
-def ffp1_ffp2_rot(**kwargs):
-    env_kwargs = _rot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_trot(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_mrot(**kwargs):
-    env_kwargs = _mrot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_ffp2_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'fp'), 'varbump' : (False, False)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_ffp2_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('max', 'fp'), 'varbump' : (True, False)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmax2_mtrot(**kwargs):
-    env_kwargs = _mtrot_kwargs()
-    env_kwargs.update({'stim_mod' : (True, True), 'rot' : (False, False), 'rot_speed' : (1, 1), 'state' : ('fp', 'max'), 'varbump' : (False, True)})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-
-
-
-
-# Fixed rings -------------------------
-def ffp1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Vanilla rotation task. All rings are fixed throughout length of trial, initialized at random locations on each ring.
-    - magnitude of rotation is proportional to the timing of rings 2 and 3. 
-    - direction of rotation is indicated by the location of bump on ring 2 and 3 (upper/lower semi-ring).
-    """
-    env_kwargs = _trot_kwargs() 
-    env_kwargs.update(kwargs) 
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Introduces delays between the presentation of rings 2 and 3. 
-    """
-    env_kwargs = _dlytrot_kwargs() 
-    env_kwargs.update(kwargs) 
-    return _TimeRotation(**env_kwargs) 
-
-def ffp1_ffp2_ffp3_mtrot2(**kwargs):
-    """
-    Magnitude of the rotation is proportional to (timing)*(ring state).
-    """
-    env_kwargs = _trot_kwargs() 
-    env_kwargs.update({'m' : True})
-    env_kwargs.update(kwargs) 
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_ffp2_ffp3_mtrot2(**kwargs):
-    """
-    Same as mtrot2(), but with delays between rings 2 and 3. 
-    """
-    env_kwargs = _dlytrot_kwargs() 
-    env_kwargs.update({'m' : True})
-    env_kwargs.update(kwargs) 
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by maximal bump position. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('max', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('max', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_ffp2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('max', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('max', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmin1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by minimal bump position. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('min', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmin1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('min', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmin1_ffp2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('min', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmin1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, False, False), 'state' : ('min', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-
-def ffp1_fmax2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by first position. 
-    Ring 2 is fixed, state indicated by maximal bump position
-    Ring 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmax2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'max', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_fmax2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_fmax2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'max', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmin2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by first position. 
-    Ring 2 is fixed, state indicated by minimal bump position
-    Ring 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'min', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def ffp1_fmin2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'min', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_fmin2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'min', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_ffp1_fmin2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (False, True, False), 'state' : ('fp', 'min', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_fmax2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by maximal position. 
-    Ring 2 is fixed, state indicated by maximal bump position
-    Ring 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_fmax2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'max', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_fmax2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'max', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_fmax2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'max', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-# 
-def fmax1_fmin2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is fixed, state is indicated by maximal position. 
-    Ring 2 is fixed, state indicated by minimal bump position
-    Ring 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'min', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def fmax1_fmin2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'min', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_fmin2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'min', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_fmax1_fmin2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'varbump' : (True, True, False), 'state' : ('max', 'min', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-# --------------------------------------
-
-# Ring 1 rotate --------------------
-def rfp1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is rotating, state is indicated by first position. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('fp', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def rfp1_ffp2_ffp3_mtrot2(**kwargs): 
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('fp', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rfp1_ffp2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('fp', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rfp1_ffp2_ffp3_mtrot2(**kwargs): 
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('fp', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-
-# 
-def rlp1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is rotating, state is indicated by last position. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('lp', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def rlp1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('lp', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rlp1_ffp2_ffp3_trot2(**kwargs): 
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('lp', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rlp1_ffp2_ffp3_mtrot2(**kwargs): 
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('lp', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-
-def rmax1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is rotating, state is indicated by position of maximal bump. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('max', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def rmax1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('max', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rmax1_ffp2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('max', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rmax1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('max', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def rmin1_ffp2_ffp3_trot2(**kwargs):
-    """
-    Ring 1 is rotating, state is indicated by position of minimal bump. 
-    Ring 2 & 3 fixed, state indicated by first position.  
-    """
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('min', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def rmin1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _trot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('min', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rmin1_ffp2_ffp3_trot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('min', 'fp', 'fp')})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-def dly_rmin1_ffp2_ffp3_mtrot2(**kwargs):
-    env_kwargs = _dlytrot_kwargs()
-    env_kwargs.update({'rot' : (True, False, False), 'state' : ('min', 'fp', 'fp'), 'm' : True})
-    env_kwargs.update(kwargs)
-    return _TimeRotation(**env_kwargs)
-
-# Ring 1 fixed or rotating, Ring 2 rotating, Ring 3 fixed 
-
+def dlyctxrot1_3ring(**kwargs):
+    env_kwargs = _3ring_ctxrot_kwargs()
+    env_kwargs.update({'delay':500, 'ctx':1})
+    env_kwargs.update(**kwargs)
+    return _ContextRotation(**env_kwargs)
+
+def dlyctxrot2_3ring(**kwargs):
+    env_kwargs = _3ring_ctxrot_kwargs()
+    env_kwargs.update({'delay':500, 'ctx':2})
+    env_kwargs.update(**kwargs)
+    return _ContextRotation(**env_kwargs)
+
+def dlyctxrot3_3ring(**kwargs):
+    env_kwargs = _3ring_ctxrot_kwargs()
+    env_kwargs.update({'delay':500, 'ctx':3})
+    env_kwargs.update(**kwargs)
+    return _ContextRotation(**env_kwargs)
+
+#### 
 
 
 
